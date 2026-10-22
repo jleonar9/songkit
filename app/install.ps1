@@ -47,9 +47,11 @@ Ok "Python ready ($py)"
 # ---------- 2. Folder + files ----------
 Step 2 'Copying Songkit files...'
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
-foreach ($f in 'app.py', 'songkit.py', 'requirements.txt', 'start.bat', 'uninstall.bat', 'LICENSE', 'README.md') {
+foreach ($f in 'app.py', 'songkit.py', 'requirements.txt', 'start.bat', 'uninstall.bat') {
     Copy-Item (Join-Path $src $f) $dest -Force
 }
+$lic = Join-Path (Split-Path $src -Parent) 'LICENSE'
+if (Test-Path $lic) { Copy-Item $lic $dest -Force }
 Copy-Item (Join-Path $src 'assets') $dest -Recurse -Force
 Ok "Installed to $dest"
 

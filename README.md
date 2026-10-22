@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/logo.png" width="160" alt="The Solid Ground"></p>
+<p align="center"><img src="app/assets/logo.png" width="160" alt="The Solid Ground"></p>
 
 <h1 align="center">Songkit</h1>
 <p align="center"><b>by The Solid Ground</b><br>
@@ -31,7 +31,7 @@ Works with songs from any source, including Suno, Udio, or your own recordings.
 
 Your files are saved in `Documents\Songkit`. To remove it: Start menu → Songkit → **Uninstall Songkit**.
 
-**Mac/Linux:** install Python 3.10+ and ffmpeg (`brew install ffmpeg`), then run `./run.sh`.
+**Mac/Linux:** install Python 3.10+ and ffmpeg (`brew install ffmpeg`), then run `app/run.sh`.
 
 ### GPU or laptop?
 - **NVIDIA GPU:** the installer adds GPU support automatically. Use the `large-v3` model.
@@ -57,10 +57,10 @@ Output goes to `output/<song-title>/`.
 ## Command line
 
 ```
-python songkit.py lyrics --audio vocals.wav --lyrics song.txt [--model medium]
-python songkit.py clip --song song.wav --clips a.mp4 b.mp4 --srt song.srt --start 1:12 --length 30 --logo
-python songkit.py clip --canvas --clips a.mp4 --out canvas.mp4
-python songkit.py slides --lyrics song.txt --title "Anyway I'll Rise"
+python app/songkit.py lyrics --audio vocals.wav --lyrics song.txt [--model medium]
+python app/songkit.py clip --song song.wav --clips a.mp4 b.mp4 --srt song.srt --start 1:12 --length 30 --logo
+python app/songkit.py clip --canvas --clips a.mp4 --out canvas.mp4
+python app/songkit.py slides --lyrics song.txt --title "Anyway I'll Rise"
 ```
 
 ## AI music and honesty
@@ -70,8 +70,8 @@ Songkit makes release assets; it doesn't hide how a song was made.
 
 ## Make it yours
 
-Replace `assets/logo.png` (square PNG, transparent background) and `assets/favicon.png` with your own art,
-and change the colors at the top of `app.py`.
+Replace `app/assets/logo.png` (square PNG, transparent background), `app/assets/favicon.png` and `app/assets/songkit.ico` with your own art,
+and change the colors at the top of `app/app.py`.
 
 ## License
 

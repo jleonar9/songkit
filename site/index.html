@@ -114,7 +114,7 @@
         <a class="btn btn-gold" id="dl" href="https://github.com/jleonar9/songkit/archive/refs/heads/main.zip">⬇ Download for Windows</a>
         <a class="btn btn-ghost" href="#app">Already installed? Open Songkit</a>
       </div>
-      <p class="small">Windows 10 or 11 · free and open source · about 1&nbsp;GB after setup</p>
+      <p class="small">Windows 10 or 11 · free and open source · 1–3&nbsp;GB after setup (more with NVIDIA graphics)</p>
     </div>
     <div class="hero-art"><img src="logo.png" alt=""></div>
   </div>
@@ -131,7 +131,7 @@
         </div>
         <div class="step">
           <h3>Install</h3>
-          <p>Open the extracted folder and double-click <b>Install-Songkit</b>. It sets everything up for you (5–10 minutes).</p>
+          <p>Open the extracted folder and double-click <b>Install-Songkit</b>. It sets everything up for you (10–15 minutes; keep your PC awake).</p>
           <p class="small">If Windows says “Windows protected your PC,” click <b>More info</b> → <b>Run anyway</b>.</p>
         </div>
         <div class="step">
@@ -155,22 +155,21 @@
   <section id="app">
     <div class="wrap">
       <h2>Open Songkit</h2>
-      <p class="sub">Songkit runs on your computer and shows up right here. Nothing leaves your PC.</p>
+      <p class="sub">Starts Songkit on your PC and opens it in a new browser tab. Nothing leaves your computer.</p>
       <div class="panel">
         <div class="panel-top">
-          <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
+          <div class="status"><span class="dot" id="dot"></span><span id="statusText">Ready</span></div>
           <div class="actions">
             <button class="btn btn-gold" id="launch">▶ Launch Songkit</button>
-            <a class="btn btn-ghost" id="openTab" href="http://127.0.0.1:7860" target="_blank" rel="noopener" hidden>Open in its own window ↗</a>
+            <a class="btn btn-ghost" id="openTab" href="http://127.0.0.1:7860" target="_blank" rel="noopener" hidden>Open Songkit ↗</a>
           </div>
         </div>
         <div class="placeholder" id="ph">
           <img src="logo.png" alt="">
-          <p>Click <b>Launch Songkit</b>. Your browser will ask to open Songkit — tick <b>Always allow</b> and click <b>Open</b>. The app appears here in a few seconds.</p>
-          <p class="small">Your browser may also ask to let this site connect to apps on your device. Click <b>Allow</b>; that's how the page reaches Songkit on your PC.</p>
+          <p>Click <b>Launch Songkit</b>. The first time, your browser asks to open Songkit. Tick <b>Always allow</b> and click <b>Open</b>.</p>
+          <p class="small">A black Songkit window opens (keep it open while you work), then Songkit appears in a new tab.</p>
           <div class="hint" id="hint"></div>
         </div>
-        <iframe id="frame" title="Songkit" allow="local-network-access; local-network; loopback-network; clipboard-write; fullscreen"></iframe>
       </div>
     </div>
   </section>
@@ -180,11 +179,11 @@
       <h2>Help</h2>
       <p class="sub">Quick answers.</p>
       <details><summary>The Launch button doesn't do anything</summary>
-        <p>Install Songkit first (steps above). If it's installed, double-click the <b>Songkit</b> icon on your desktop instead. The page connects on its own once Songkit is running.</p></details>
-      <details><summary>It says “Running” but the app area stays blank</summary>
-        <p>Some browsers won't show local apps inside a web page. Click <b>Open in its own window</b>; it's the same app.</p></details>
+        <p>Install Songkit first (steps above). If it's installed, double-click the <b>Songkit</b> icon on your desktop instead. It does the same thing.</p></details>
+      <details><summary>Songkit opened, but I closed the tab</summary>
+        <p>Click <b>Launch Songkit</b> again, or go to <code>127.0.0.1:7860</code>. As long as the black Songkit window is open, it's still running.</p></details>
       <details><summary>Is my music uploaded anywhere?</summary>
-        <p>No. This website only shows the app. Songkit itself runs on your PC, and your files are saved in <code>Documents\Songkit</code>.</p></details>
+        <p>No. This website only helps you download and start Songkit. Songkit itself runs on your PC, and your files are saved in <code>Documents\Songkit</code>.</p></details>
       <details><summary>Do I need a gaming graphics card?</summary>
         <p>No. Songkit works on any Windows PC. An NVIDIA card just makes lyric timing faster. On a laptop, choose the <b>medium</b> or <b>small</b> model.</p></details>
       <details><summary>The black Songkit window opened. Can I close it?</summary>
@@ -209,94 +208,23 @@
 
 <script>
 (() => {
-  const LOCAL = 'http://127.0.0.1:7860';
   const $ = id => document.getElementById(id);
-  const dot = $('dot'), text = $('statusText'), btn = $('launch'), frame = $('frame'),
-        ph = $('ph'), hint = $('hint'), openTab = $('openTab');
-  let polling = null, connected = false;
+  const dot = $('dot'), text = $('statusText'), btn = $('launch'), hint = $('hint'), openTab = $('openTab');
+  let timer = null;
 
-  function setStatus(kind, msg) {
-    dot.className = 'dot' + (kind === 'on' ? ' on' : kind === 'wait' ? ' wait' : '');
-    text.textContent = msg;
-  }
-
-  // Is Songkit answering on this PC? (no-cors: we only need to know it's there)
-  async function isUp() {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 1500);
-    try {
-      await fetch(LOCAL + '/config', { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });
-      return true;
-    } catch { return false; }
-    finally { clearTimeout(t); }
-  }
-
-  function showApp() {
-    connected = true;
-    setStatus('on', 'Running on your PC');
-    btn.textContent = '↻ Reload';
-    btn.classList.remove('btn-ghost'); btn.classList.add('btn-gold');
+  btn.addEventListener('click', () => {
+    // Starts Songkit on this PC (set up by Install-Songkit). It opens itself in a new tab.
+    window.location.href = 'songkit://open';
+    dot.className = 'dot wait';
+    text.textContent = 'Opening Songkit…';
     openTab.hidden = false;
-    openTab.classList.remove('btn-gold'); openTab.classList.add('btn-ghost');
-    openTab.textContent = 'Open in its own window ↗';
-    hint.classList.remove('show');
-    if (!frame.classList.contains('show')) {
-      frame.src = LOCAL;
-      frame.classList.add('show');
-      ph.style.display = 'none';
-    }
-  }
-
-  function showHint(html) { hint.innerHTML = html; hint.classList.add('show'); }
-
-  function startPolling(maxSeconds) {
-    clearInterval(polling);
-    const started = Date.now();
-    polling = setInterval(async () => {
-      if (await isUp()) { clearInterval(polling); showApp(); return; }
-      const secs = (Date.now() - started) / 1000;
-      if (secs > maxSeconds) {
-        clearInterval(polling);
-        setStatus('', 'Not connected');
-      }
-    }, 1500);
-  }
-
-  // Can this page talk to apps on the PC? (Chrome/Edge ask once; some browsers block it)
-  async function localAccess() {
-    try { return (await navigator.permissions.query({ name: 'local-network-access' })).state; }
-    catch { return 'unknown'; }
-  }
-
-  function offerOwnWindow(msg) {
-    openTab.hidden = false;
-    openTab.classList.remove('btn-ghost'); openTab.classList.add('btn-gold');
-    openTab.textContent = 'Open Songkit ↗';
-    btn.classList.remove('btn-gold'); btn.classList.add('btn-ghost');
-    showHint(msg);
-  }
-
-  btn.addEventListener('click', async () => {
-    if (connected) { frame.src = LOCAL; return; }
-    setStatus('wait', 'Starting Songkit…');
-    if (await isUp()) { showApp(); return; }
-    window.location.href = 'songkit://open';   // starts the app installed on this PC
-    if ((await localAccess()) === 'denied') {
-      // This browser won't let the page show Songkit inside it; open it in its own tab instead.
-      setStatus('wait', 'Starting Songkit on your PC…');
-      offerOwnWindow('<b>Almost there.</b> A black Songkit window opens on your PC. Give it about 20 seconds (the first time), then click <b>Open Songkit</b>. It opens in its own tab.');
-      return;
-    }
-    startPolling(180);
-    setTimeout(() => {
-      if (!connected) offerOwnWindow('<b>Taking a while?</b> If the black Songkit window says it is starting, click <b>Open Songkit</b>. If nothing opened at all, install Songkit first (steps above) or double-click the <b>Songkit</b> icon on your desktop.');
-    }, 12000);
+    hint.innerHTML = '<b>Songkit opens in a new tab</b> in a few seconds (about 20 the first time). ' +
+      'If it doesn\'t, click <b>Open Songkit</b>.<br><br>' +
+      '<b>Nothing at all?</b> Install Songkit first (steps above), or double-click the <b>Songkit</b> icon on your desktop.';
+    hint.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(() => { dot.className = 'dot on'; text.textContent = 'Should be open in a new tab'; }, 20000);
   });
-
-  // Came from "Open Songkit" link with the app already running? Connect quietly.
-  if (location.hash === '#app') {
-    isUp().then(up => { if (up) showApp(); });
-  }
 })();
 </script>
 </body>

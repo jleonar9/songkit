@@ -22,5 +22,5 @@ SOFTWARE.
 
 ---
 Trademark / artwork notice: The name "The Solid Ground" and the files in
-assets/ (logo.png, favicon.png) are NOT licensed under the MIT License above.
+app/assets/ (logo, favicon, icon) are NOT licensed under the MIT License above.
 All rights reserved. Forks and redistributions must replace them.

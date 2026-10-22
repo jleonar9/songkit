@@ -7,7 +7,10 @@ Everything runs on your own computer. Start it with:  python app.py
 import base64
 import os
 import re
+import warnings
 from pathlib import Path
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import gradio as gr
 

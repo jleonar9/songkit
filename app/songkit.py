@@ -152,12 +152,18 @@ def transcribe(audio, model_size="large-v3", device="auto", log=print):
         from faster_whisper import WhisperModel
     except ImportError:
         raise SongkitError("faster-whisper isn't installed. Run: pip install faster-whisper")
-    tries = [("cuda", "float16"), ("cpu", "int8")] if device == "auto" else \
-            [(device, "float16" if device == "cuda" else "int8")]
+    # float16 needs a newer NVIDIA card; older ones (e.g. GTX 10xx) use int8 on the GPU instead.
+    gpu = [("cuda", "float16"), ("cuda", "int8_float32")]
+    if device == "auto":
+        tries = gpu + [("cpu", "int8")]
+    elif device == "cuda":
+        tries = gpu
+    else:
+        tries = [("cpu", "int8")]
     last = None
     for dev, ct in tries:
         try:
-            log(f"Loading Whisper '{model_size}' on {dev} (first run downloads the model)...")
+            log(f"Loading Whisper '{model_size}' on {dev}/{ct} (first run downloads the model)...")
             model = WhisperModel(model_size, device=dev, compute_type=ct)
             segs, _ = model.transcribe(str(audio), word_timestamps=True, language="en")
             words = [(norm(w.word), w.start, w.end) for s in segs for w in (s.words or [])]
