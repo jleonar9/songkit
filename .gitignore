@@ -4,3 +4,8 @@ output/
 *.mp4
 *.wav
 *.mp3
+!examples/**/*.mp4
+# song folders made by older Songkit versions inside this folder
+/Gold Dust Feet/
+/gold-dust-feet/
+/untitled/

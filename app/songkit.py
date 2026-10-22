@@ -54,6 +54,11 @@ def ts_lrc(t):
     return f"[{m:02d}:{s:02d}.{cs:02d}]"
 
 
+def clock(t):
+    """Seconds -> '01:23.45' (easy to read and edit)."""
+    return ts_lrc(t)[1:-1]
+
+
 def ts_srt(t):
     ms = int(round(max(t, 0) * 1000))
     h, ms = divmod(ms, 3600000)
@@ -146,8 +151,21 @@ def _add_gpu_libs():
             os.environ["PATH"] = d + os.pathsep + os.environ.get("PATH", "")
 
 
+def load_audio(path, sr=16000):
+    """Decode any audio file to 16 kHz mono float32 with ffmpeg (what Whisper expects)."""
+    import numpy as np
+    ff = ffmpeg_path()
+    r = subprocess.run([ff, "-nostdin", "-i", str(path), "-f", "s16le", "-ac", "1", "-ar", str(sr), "-"],
+                       capture_output=True)
+    if r.returncode != 0 or not r.stdout:
+        raise SongkitError("Couldn't read that audio file:\n" + r.stderr.decode(errors="ignore")[-800:])
+    return np.frombuffer(r.stdout, np.int16).astype(np.float32) / 32768.0
+
+
 def transcribe(audio, model_size="large-v3", device="auto", log=print):
     _add_gpu_libs()
+    log("Reading audio...")
+    samples = load_audio(audio)
     try:
         from faster_whisper import WhisperModel
     except ImportError:
@@ -165,7 +183,7 @@ def transcribe(audio, model_size="large-v3", device="auto", log=print):
         try:
             log(f"Loading Whisper '{model_size}' on {dev}/{ct} (first run downloads the model)...")
             model = WhisperModel(model_size, device=dev, compute_type=ct)
-            segs, _ = model.transcribe(str(audio), word_timestamps=True, language="en")
+            segs, _ = model.transcribe(samples, word_timestamps=True, language="en")
             words = [(norm(w.word), w.start, w.end) for s in segs for w in (s.words or [])]
             words = [w for w in words if w[0]]
             log(f"Heard {len(words)} words on {dev}.")
@@ -230,9 +248,56 @@ def make_timed_lyrics(audio, lyrics_text, out_stem, model="large-v3", device="au
     lrc, srt = out_stem.with_suffix(".lrc"), out_stem.with_suffix(".srt")
     lrc.write_text("".join(f"{ts_lrc(s)}{l}\n" for s, l in zip(starts, lines)), encoding="utf-8")
     write_srt(srt, list(zip(starts, ends, lines)))
-    rows = [(ts_lrc(s)[1:-1], l, "heard" if i in matched else "estimated")
-            for i, (s, l) in enumerate(zip(starts, lines))]
+    rows = [(clock(s), clock(e), l, "heard" if i in matched else "estimated - check")
+            for i, (s, e, l) in enumerate(zip(starts, ends, lines))]
     return lrc, srt, rows
+
+
+def parse_clock(t):
+    """'01:23.45', '1:23', '83.4' or '00:01:23,450' -> seconds."""
+    t = str(t).strip().strip("[]").replace(",", ".")
+    if not t:
+        raise ValueError("empty time")
+    parts = t.split(":")
+    secs = 0.0
+    for p in parts:
+        secs = secs * 60 + float(p)
+    return secs
+
+
+def read_timed(path):
+    """Read an .srt or .lrc back into [(start, end_or_None, line)]."""
+    path = Path(path)
+    if path.suffix.lower() == ".srt":
+        return read_srt(path)
+    rows = []
+    for raw in path.read_text(encoding="utf-8-sig").splitlines():
+        text = re.sub(r"\[[^\]]*\]", "", raw).strip()
+        for m in re.finditer(r"\[(\d+:\d+(?:[.:]\d+)?)\]", raw):
+            if text:
+                rows.append((parse_clock(m.group(1)), None, text))
+    return sorted(rows, key=lambda r: r[0])
+
+
+def save_timed(rows, out_stem, max_hold=6.0):
+    """Write .lrc + .srt from [(start, end_or_None, line)]. A blank end means 'until the next line'
+    (at most max_hold seconds). Lines with no text are dropped. Returns (lrc, srt)."""
+    rows = sorted(((float(s), e, str(t).strip()) for s, e, t in rows if str(t).strip()), key=lambda r: r[0])
+    if not rows:
+        raise SongkitError("There are no lyric lines to save.")
+    items = []
+    for i, (s, e, t) in enumerate(rows):
+        nxt = rows[i + 1][0] if i + 1 < len(rows) else s + max_hold
+        if e is None:
+            e = min(nxt - 0.05, s + max_hold)
+        else:
+            e = min(float(e), nxt - 0.05) if i + 1 < len(rows) else float(e)
+        items.append((s, max(e, s + 0.3), t))
+    out_stem = Path(out_stem)
+    lrc, srt = out_stem.with_suffix(".lrc"), out_stem.with_suffix(".srt")
+    lrc.write_text("".join(f"{ts_lrc(s)}{t}\n" for s, _e, t in items), encoding="utf-8")
+    write_srt(srt, items)
+    return lrc, srt
 
 
 # ---------- 2. clips + canvas ----------
@@ -328,8 +393,8 @@ def make_lyric_sheet(lyrics_text, out, title="Untitled", artist="The Solid Groun
         secs.append(f'<section>{head}<p>{body}</p></section>')
     page = f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(title)}</title>
 <style>
- @page {{ size: letter; margin: 0.6in; }}
- body {{ font-family: Georgia, 'Times New Roman', serif; color:#1a1a16; margin:0 auto; max-width:7.3in; }}
+ @page {{ size: letter; margin: 0; }}  /* margin 0 also hides the browser's date/URL header and footer */
+ body {{ font-family: Georgia, 'Times New Roman', serif; color:#1a1a16; margin:0 auto; max-width:8.5in; padding:0.6in; box-sizing:border-box; }}
  header {{ display:flex; align-items:center; gap:18px; border-bottom:2px solid #c8963e; padding-bottom:12px; margin-bottom:18px; }}
  .logo {{ width:78px; height:78px; }}
  h1 {{ font-family: 'Arial Black', Arial, sans-serif; text-transform:uppercase; letter-spacing:.06em; margin:0; font-size:26px; }}
@@ -383,8 +448,8 @@ def main():
             text = Path(args.lyrics).read_text(encoding="utf-8-sig")
             stem = args.out or str(Path(args.lyrics).with_suffix(""))
             lrc, srt, rows = make_timed_lyrics(args.audio, text, stem, args.model, args.device)
-            for t, line, how in rows:
-                print(f"  [{t}] {line}" + ("   <- estimated" if how == "estimated" else ""))
+            for t, _e, line, how in rows:
+                print(f"  [{t}] {line}" + ("   <- estimated" if how != "heard" else ""))
             print(f"\nWrote {lrc} and {srt}")
         elif args.cmd == "clip":
             if args.canvas:

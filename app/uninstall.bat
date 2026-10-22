@@ -2,7 +2,7 @@
 title Remove Songkit
 echo.
 echo   This removes Songkit from this PC.
-echo   Your songs and files in Documents\Songkit are kept.
+echo   Your songs and files in Documents\Songkit Songs are kept.
 echo.
 choice /m "  Remove Songkit now"
 if errorlevel 2 exit /b

@@ -52,6 +52,8 @@ foreach ($f in 'app.py', 'songkit.py', 'requirements.txt', 'start.bat', 'uninsta
 }
 $lic = Join-Path (Split-Path $src -Parent) 'LICENSE'
 if (Test-Path $lic) { Copy-Item $lic $dest -Force }
+$examples = Join-Path (Split-Path $src -Parent) 'examples'
+if (Test-Path $examples) { Copy-Item $examples $dest -Recurse -Force }
 Copy-Item (Join-Path $src 'assets') $dest -Recurse -Force
 Ok "Installed to $dest"
 
@@ -126,6 +128,6 @@ Ok 'The "Launch Songkit" button on the website now works'
 
 Write-Host "`n  All done! Songkit is installed." -ForegroundColor Green
 Write-Host "  Start it from the website's Launch button or the Songkit icon on your desktop." -ForegroundColor Gray
-Write-Host "  Your files are saved in Documents\Songkit.`n" -ForegroundColor Gray
+Write-Host "  Your files are saved in Documents\Songkit Songs.`n" -ForegroundColor Gray
 Start-Process (Join-Path $dest 'start.bat') -WorkingDirectory $dest
 Read-Host 'Press Enter to close this window'
