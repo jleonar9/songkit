@@ -14,6 +14,7 @@ GUI:  python app.py
 import argparse
 import difflib
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -85,7 +86,13 @@ def read_srt(path):
 
 
 def ffmpeg_path():
-    ff = shutil.which("ffmpeg")
+    ff = None
+    saved = HERE / "ffmpeg_path.txt"  # written by the Windows installer
+    if saved.exists():
+        p = saved.read_text(encoding="utf-8", errors="ignore").strip()
+        if p and Path(p).exists():
+            ff = p
+    ff = ff or shutil.which("ffmpeg")
     if not ff:
         raise SongkitError("ffmpeg isn't installed. On Windows run: winget install ffmpeg "
                            "(then close and reopen the app).")
@@ -123,7 +130,24 @@ def read_lyrics_text(text):
 
 # ---------- 1. timed lyrics ----------
 
+def _add_gpu_libs():
+    """On Windows, let faster-whisper find the NVIDIA libraries the installer added."""
+    if os.name != "nt":
+        return
+    import glob
+    import site
+    roots = list(site.getsitepackages()) + [site.getusersitepackages()]
+    for root in roots:
+        for d in glob.glob(os.path.join(root, "nvidia", "*", "bin")):
+            try:
+                os.add_dll_directory(d)
+            except (OSError, AttributeError):
+                pass
+            os.environ["PATH"] = d + os.pathsep + os.environ.get("PATH", "")
+
+
 def transcribe(audio, model_size="large-v3", device="auto", log=print):
+    _add_gpu_libs()
     try:
         from faster_whisper import WhisperModel
     except ImportError:

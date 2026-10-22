@@ -22,16 +22,25 @@ Works with songs from any source, including Suno, Udio, or your own recordings.
 
 ## Install (Windows)
 
-1. Install **Python 3.10+** from python.org (check *Add to PATH*).
-2. Install **ffmpeg**: `winget install ffmpeg`
-3. Double-click **`run.bat`**. The first run installs everything and opens the app in your browser.
+**Easiest:** go to the Songkit website, click **Download**, and follow the 3 steps.
 
-**Mac/Linux:** `brew install ffmpeg` (or your package manager), then `./run.sh`.
+1. Download the zip and choose **Extract All**.
+2. Double-click **`Install-Songkit.bat`**. It installs Python and ffmpeg if needed, sets Songkit up, and adds a desktop icon (5 to 10 minutes, one time).
+3. Click **Launch Songkit** on the website, or use the desktop icon.
+
+Your files are saved in `Documents\Songkit`. To remove it: Start menu → Songkit → **Uninstall Songkit**.
+
+**Mac/Linux:** install Python 3.10+ and ffmpeg (`brew install ffmpeg`), then run `./run.sh`.
 
 ### GPU or laptop?
-- **NVIDIA GPU (6GB+ VRAM):** use the `large-v3` model; it takes under a minute per song.
+- **NVIDIA GPU:** the installer adds GPU support automatically. Use the `large-v3` model.
 - **Laptop / no GPU:** pick `medium` or `small`. It's slower, but works.
-- If the GPU isn't set up for CUDA, the app falls back to CPU on its own.
+- If the GPU can't be used, the app falls back to the CPU on its own.
+
+### How the website works
+The website (in `site/`, hosted on Netlify) is just the front door. **Launch Songkit** opens the app installed on your PC
+through a `songkit://` link and shows it inside the page from `127.0.0.1:7860`. All processing happens on your own CPU/GPU,
+and your audio never leaves your computer.
 
 ## Workflow
 

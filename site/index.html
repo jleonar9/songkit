@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Songkit · The Solid Ground</title>
+<meta name="description" content="Free app for releasing your songs: synced lyrics, lyric clips, Spotify Canvas loops and church slides. Runs on your own computer.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --char: #1a1a16; --panel: #24231e; --panel2: #2e2c26; --line: #3a382f;
+    --cream: #e4d8c5; --stone: #9a948b; --gold: #c8963e; --gold2: #d9a74e; --sunset: #b04b24;
+    --ok: #7fae5a; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--char); color: var(--cream); font: 16px/1.6 Inter, system-ui, sans-serif; }
+  a { color: var(--gold); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  header { border-bottom: 2px solid var(--gold); }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 14px 0; }
+  .bar img { width: 52px; height: 52px; }
+  .brand { font-family: 'Roboto Slab', Georgia, serif; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: 22px; }
+  .bar nav { margin-left: auto; display: flex; gap: 18px; font-size: 14px; }
+  .bar nav a { color: var(--stone); text-decoration: none; }
+  .bar nav a:hover { color: var(--cream); }
+
+  .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; padding: 56px 0 48px; }
+  .eyebrow { color: var(--gold); letter-spacing: .16em; text-transform: uppercase; font-size: 13px; font-weight: 600; }
+  h1 { font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 5vw, 50px); line-height: 1.1; margin: 10px 0 16px; }
+  .lead { color: #cfc4b2; font-size: 18px; max-width: 34em; }
+  .hero-art img { width: 100%; max-width: 340px; display: block; margin: 0 auto; filter: drop-shadow(0 18px 40px rgba(0,0,0,.6)); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 10px; padding: 14px 22px; font: 600 16px Inter, sans-serif; cursor: pointer; text-decoration: none; transition: transform .08s, background .15s; }
+  .btn:active { transform: translateY(1px); }
+  .btn-gold { background: var(--gold); color: var(--char); }
+  .btn-gold:hover { background: var(--gold2); }
+  .btn-ghost { background: var(--panel2); color: var(--cream); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--gold); }
+  .small { font-size: 13px; color: var(--stone); margin-top: 10px; }
+
+  section { padding: 44px 0; }
+  h2 { font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; margin: 0 0 6px; }
+  .sub { color: var(--stone); margin: 0 0 24px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: s; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; position: relative; }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 20px; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--char); font-weight: 700; display: grid; place-items: center; }
+  .step h3 { margin: 6px 0 6px; font-size: 18px; }
+  .step p { margin: 0; color: #cfc4b2; font-size: 15px; }
+  .step .btn { margin-top: 14px; padding: 10px 16px; font-size: 14px; }
+
+  .feats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .feat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .feat b { display: block; color: var(--gold); margin-bottom: 4px; }
+  .feat span { color: #cfc4b2; font-size: 14px; }
+
+  #app .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .panel-top { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .status { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--stone); box-shadow: 0 0 0 4px rgba(154,148,139,.15); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 0 4px rgba(127,174,90,.2); }
+  .dot.wait { background: var(--gold); animation: pulse 1s infinite alternate; }
+  @keyframes pulse { to { opacity: .35; } }
+  .panel-top .actions { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  .panel-top .btn { padding: 10px 16px; font-size: 14px; }
+  .placeholder { padding: 48px 24px; text-align: center; color: #cfc4b2; }
+  .placeholder img { width: 90px; opacity: .9; }
+  .placeholder p { max-width: 36em; margin: 12px auto; }
+  .hint { display: none; margin: 14px auto 0; max-width: 40em; background: #3b3122; border: 1px solid #5a4728; border-radius: 10px; padding: 12px 16px; text-align: left; font-size: 14px; }
+  .hint.show { display: block; }
+  iframe { display: none; width: 100%; height: 1150px; border: 0; background: var(--char); }
+  iframe.show { display: block; }
+
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p, details ol { color: #cfc4b2; margin: 10px 0 2px; font-size: 15px; }
+  code { background: var(--panel2); padding: 1px 6px; border-radius: 5px; font-size: 14px; }
+
+  footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--stone); font-size: 13px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; padding-top: 36px; }
+    .hero-art { order: -1; } .hero-art img { max-width: 180px; }
+    .steps, .feats { grid-template-columns: 1fr; }
+    .feats { grid-template-columns: 1fr 1fr; }
+    .bar nav { display: none; }
+    .step { margin-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <img src="logo.png" alt="The Solid Ground">
+    <div class="brand">Songkit</div>
+    <nav><a href="#get">Get it</a><a href="#app">Open Songkit</a><a href="#help">Help</a><a href="https://github.com/jleonar9/songkit">GitHub</a></nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <div class="eyebrow">Free · by The Solid Ground</div>
+      <h1>Release your songs the easy way.</h1>
+      <p class="lead">Synced lyrics, lyric videos for Reels and Shorts, Spotify Canvas loops, and church slides. Everything runs on your own computer, and your music is never uploaded.</p>
+      <div class="ctas">
+        <a class="btn btn-gold" id="dl" href="https://github.com/jleonar9/songkit/archive/refs/heads/main.zip">⬇ Download for Windows</a>
+        <a class="btn btn-ghost" href="#app">Already installed? Open Songkit</a>
+      </div>
+      <p class="small">Windows 10 or 11 · free and open source · about 1&nbsp;GB after setup</p>
+    </div>
+    <div class="hero-art"><img src="logo.png" alt=""></div>
+  </div>
+
+  <section id="get">
+    <div class="wrap">
+      <h2>Set up in 3 steps</h2>
+      <p class="sub">One time only. After that, just click <b>Launch Songkit</b> below.</p>
+      <div class="steps">
+        <div class="step">
+          <h3>Download</h3>
+          <p>Get the zip file, then right-click it and choose <b>Extract All</b>.</p>
+          <a class="btn btn-gold" href="https://github.com/jleonar9/songkit/archive/refs/heads/main.zip">⬇ Download</a>
+        </div>
+        <div class="step">
+          <h3>Install</h3>
+          <p>Open the extracted folder and double-click <b>Install-Songkit</b>. It sets everything up for you (5–10 minutes).</p>
+          <p class="small">If Windows says “Windows protected your PC,” click <b>More info</b> → <b>Run anyway</b>.</p>
+        </div>
+        <div class="step">
+          <h3>Launch</h3>
+          <p>Come back here and click <b>Launch Songkit</b>, or use the <b>Songkit</b> icon on your desktop.</p>
+          <a class="btn btn-ghost" href="#app">Go to Launch</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap feats">
+      <div class="feat"><b>Synced lyrics</b><span>Times every line to your vocal. Use it for Spotify lyrics via Musixmatch.</span></div>
+      <div class="feat"><b>Lyric clips</b><span>Vertical videos with captions for Reels, Shorts and TikTok.</span></div>
+      <div class="feat"><b>Spotify Canvas</b><span>The short looping video behind your song.</span></div>
+      <div class="feat"><b>Church kit</b><span>Slides for ProPresenter and a printable lyric sheet.</span></div>
+    </div>
+  </section>
+
+  <section id="app">
+    <div class="wrap">
+      <h2>Open Songkit</h2>
+      <p class="sub">Songkit runs on your computer and shows up right here. Nothing leaves your PC.</p>
+      <div class="panel">
+        <div class="panel-top">
+          <div class="status"><span class="dot" id="dot"></span><span id="statusText">Not connected</span></div>
+          <div class="actions">
+            <button class="btn btn-gold" id="launch">▶ Launch Songkit</button>
+            <a class="btn btn-ghost" id="openTab" href="http://127.0.0.1:7860" target="_blank" rel="noopener" hidden>Open in its own window ↗</a>
+          </div>
+        </div>
+        <div class="placeholder" id="ph">
+          <img src="logo.png" alt="">
+          <p>Click <b>Launch Songkit</b>. Your browser will ask to open Songkit — tick <b>Always allow</b> and click <b>Open</b>. The app appears here in a few seconds.</p>
+          <p class="small">Your browser may also ask to let this site connect to apps on your device. Click <b>Allow</b>; that's how the page reaches Songkit on your PC.</p>
+          <div class="hint" id="hint"></div>
+        </div>
+        <iframe id="frame" title="Songkit" allow="local-network-access; local-network; loopback-network; clipboard-write; fullscreen"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="help">
+    <div class="wrap">
+      <h2>Help</h2>
+      <p class="sub">Quick answers.</p>
+      <details><summary>The Launch button doesn't do anything</summary>
+        <p>Install Songkit first (steps above). If it's installed, double-click the <b>Songkit</b> icon on your desktop instead. The page connects on its own once Songkit is running.</p></details>
+      <details><summary>It says “Running” but the app area stays blank</summary>
+        <p>Some browsers won't show local apps inside a web page. Click <b>Open in its own window</b>; it's the same app.</p></details>
+      <details><summary>Is my music uploaded anywhere?</summary>
+        <p>No. This website only shows the app. Songkit itself runs on your PC, and your files are saved in <code>Documents\Songkit</code>.</p></details>
+      <details><summary>Do I need a gaming graphics card?</summary>
+        <p>No. Songkit works on any Windows PC. An NVIDIA card just makes lyric timing faster. On a laptop, choose the <b>medium</b> or <b>small</b> model.</p></details>
+      <details><summary>The black Songkit window opened. Can I close it?</summary>
+        <p>Keep it open while you use Songkit. Closing it quits the app.</p></details>
+      <details><summary>Mac or Linux?</summary>
+        <p>Yes, with a few manual steps. See the instructions on <a href="https://github.com/jleonar9/songkit#install-windows">GitHub</a>.</p></details>
+      <details><summary>How do I uninstall?</summary>
+        <p>Start menu → Songkit → <b>Uninstall Songkit</b>. Your songs in <code>Documents\Songkit</code> are kept.</p></details>
+      <details><summary>AI-made songs</summary>
+        <p>If AI made part of your song, say so where your distributor asks (DistroKid calls this AI Credits). Songkit makes release assets; it doesn't hide how a song was made.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 The Solid Ground</span>
+    <a href="https://github.com/jleonar9/songkit">Source on GitHub</a>
+    <span>Code: MIT license · Name and logo: all rights reserved</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const LOCAL = 'http://127.0.0.1:7860';
+  const $ = id => document.getElementById(id);
+  const dot = $('dot'), text = $('statusText'), btn = $('launch'), frame = $('frame'),
+        ph = $('ph'), hint = $('hint'), openTab = $('openTab');
+  let polling = null, connected = false;
+
+  function setStatus(kind, msg) {
+    dot.className = 'dot' + (kind === 'on' ? ' on' : kind === 'wait' ? ' wait' : '');
+    text.textContent = msg;
+  }
+
+  // Is Songkit answering on this PC? (no-cors: we only need to know it's there)
+  async function isUp() {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 1500);
+    try {
+      await fetch(LOCAL + '/config', { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });
+      return true;
+    } catch { return false; }
+    finally { clearTimeout(t); }
+  }
+
+  function showApp() {
+    connected = true;
+    setStatus('on', 'Running on your PC');
+    btn.textContent = '↻ Reload';
+    openTab.hidden = false;
+    hint.classList.remove('show');
+    if (!frame.classList.contains('show')) {
+      frame.src = LOCAL;
+      frame.classList.add('show');
+      ph.style.display = 'none';
+    }
+  }
+
+  function showHint(html) { hint.innerHTML = html; hint.classList.add('show'); }
+
+  function startPolling(maxSeconds) {
+    clearInterval(polling);
+    const started = Date.now();
+    let hinted = false;
+    polling = setInterval(async () => {
+      if (await isUp()) { clearInterval(polling); showApp(); return; }
+      const secs = (Date.now() - started) / 1000;
+      if (!hinted && secs > 20) {
+        hinted = true;
+        showHint('<b>Still waiting…</b> If nothing opened, make sure Songkit is installed (steps above), then double-click the <b>Songkit</b> icon on your desktop. This page will connect by itself.');
+      }
+      if (secs > maxSeconds) {
+        clearInterval(polling);
+        setStatus('', 'Not connected');
+        btn.disabled = false;
+        btn.textContent = '▶ Launch Songkit';
+      }
+    }, 1500);
+  }
+
+  btn.addEventListener('click', async () => {
+    if (connected) { frame.src = LOCAL; return; }
+    setStatus('wait', 'Starting Songkit…');
+    btn.disabled = true;
+    btn.textContent = 'Starting…';
+    if (await isUp()) { btn.disabled = false; showApp(); return; }
+    window.location.href = 'songkit://open';   // opens the app installed on this PC
+    btn.disabled = false;
+    btn.textContent = '▶ Launch Songkit';
+    startPolling(180);
+  });
+
+  // Came from "Open Songkit" link with the app already running? Connect quietly.
+  if (location.hash === '#app') {
+    isUp().then(up => { if (up) showApp(); });
+  }
+})();
+</script>
+</body>
+</html>

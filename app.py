@@ -5,6 +5,7 @@ timed lyrics, lyric clips, Spotify Canvas loops and church-ready lyric files.
 Everything runs on your own computer. Start it with:  python app.py
 """
 import base64
+import os
 import re
 from pathlib import Path
 
@@ -13,7 +14,7 @@ import gradio as gr
 import songkit as sk
 
 HERE = Path(__file__).resolve().parent
-OUT_ROOT = HERE / "output"
+OUT_ROOT = Path.home() / "Documents" / "Songkit"
 ASSETS = HERE / "assets"
 
 CHARCOAL, PANEL, PANEL2 = "#1a1a16", "#24231e", "#2e2c26"
@@ -218,5 +219,5 @@ with gr.Blocks(title="Songkit · The Solid Ground", css=CSS, theme=THEME) as dem
 
 if __name__ == "__main__":
     OUT_ROOT.mkdir(exist_ok=True)
-    demo.queue().launch(inbrowser=True, favicon_path=str(ASSETS / "favicon.png"),
+    demo.queue().launch(inbrowser=not os.environ.get("SONGKIT_NO_BROWSER"), favicon_path=str(ASSETS / "favicon.png"),
                         allowed_paths=[str(OUT_ROOT)])
