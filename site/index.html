@@ -16,6 +16,7 @@
     --ok: #7fae5a; --radius: 14px;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--char); color: var(--cream); font: 16px/1.6 Inter, system-ui, sans-serif; }
   a { color: var(--gold); }
@@ -29,7 +30,7 @@
   .bar nav a { color: var(--stone); text-decoration: none; }
   .bar nav a:hover { color: var(--cream); }
 
-  .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; padding: 56px 0 48px; }
+  .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; padding-top: 56px; padding-bottom: 48px; }
   .eyebrow { color: var(--gold); letter-spacing: .16em; text-transform: uppercase; font-size: 13px; font-weight: 600; }
   h1 { font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 5vw, 50px); line-height: 1.1; margin: 10px 0 16px; }
   .lead { color: #cfc4b2; font-size: 18px; max-width: 34em; }
@@ -234,7 +235,10 @@
     connected = true;
     setStatus('on', 'Running on your PC');
     btn.textContent = '↻ Reload';
+    btn.classList.remove('btn-ghost'); btn.classList.add('btn-gold');
     openTab.hidden = false;
+    openTab.classList.remove('btn-gold'); openTab.classList.add('btn-ghost');
+    openTab.textContent = 'Open in its own window ↗';
     hint.classList.remove('show');
     if (!frame.classList.contains('show')) {
       frame.src = LOCAL;
@@ -248,33 +252,45 @@
   function startPolling(maxSeconds) {
     clearInterval(polling);
     const started = Date.now();
-    let hinted = false;
     polling = setInterval(async () => {
       if (await isUp()) { clearInterval(polling); showApp(); return; }
       const secs = (Date.now() - started) / 1000;
-      if (!hinted && secs > 20) {
-        hinted = true;
-        showHint('<b>Still waiting…</b> If nothing opened, make sure Songkit is installed (steps above), then double-click the <b>Songkit</b> icon on your desktop. This page will connect by itself.');
-      }
       if (secs > maxSeconds) {
         clearInterval(polling);
         setStatus('', 'Not connected');
-        btn.disabled = false;
-        btn.textContent = '▶ Launch Songkit';
       }
     }, 1500);
+  }
+
+  // Can this page talk to apps on the PC? (Chrome/Edge ask once; some browsers block it)
+  async function localAccess() {
+    try { return (await navigator.permissions.query({ name: 'local-network-access' })).state; }
+    catch { return 'unknown'; }
+  }
+
+  function offerOwnWindow(msg) {
+    openTab.hidden = false;
+    openTab.classList.remove('btn-ghost'); openTab.classList.add('btn-gold');
+    openTab.textContent = 'Open Songkit ↗';
+    btn.classList.remove('btn-gold'); btn.classList.add('btn-ghost');
+    showHint(msg);
   }
 
   btn.addEventListener('click', async () => {
     if (connected) { frame.src = LOCAL; return; }
     setStatus('wait', 'Starting Songkit…');
-    btn.disabled = true;
-    btn.textContent = 'Starting…';
-    if (await isUp()) { btn.disabled = false; showApp(); return; }
-    window.location.href = 'songkit://open';   // opens the app installed on this PC
-    btn.disabled = false;
-    btn.textContent = '▶ Launch Songkit';
+    if (await isUp()) { showApp(); return; }
+    window.location.href = 'songkit://open';   // starts the app installed on this PC
+    if ((await localAccess()) === 'denied') {
+      // This browser won't let the page show Songkit inside it; open it in its own tab instead.
+      setStatus('wait', 'Starting Songkit on your PC…');
+      offerOwnWindow('<b>Almost there.</b> A black Songkit window opens on your PC. Give it about 20 seconds (the first time), then click <b>Open Songkit</b>. It opens in its own tab.');
+      return;
+    }
     startPolling(180);
+    setTimeout(() => {
+      if (!connected) offerOwnWindow('<b>Taking a while?</b> If the black Songkit window says it is starting, click <b>Open Songkit</b>. If nothing opened at all, install Songkit first (steps above) or double-click the <b>Songkit</b> icon on your desktop.');
+    }, 12000);
   });
 
   // Came from "Open Songkit" link with the app already running? Connect quietly.

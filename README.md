@@ -3,7 +3,8 @@
 <h1 align="center">Songkit</h1>
 <p align="center"><b>by The Solid Ground</b><br>
 A free, local app for releasing your songs: timed lyrics, lyric clips, Spotify Canvas loops and church-ready lyric files.<br>
-Everything runs on your own computer. Nothing is uploaded.</p>
+Everything runs on your own computer. Nothing is uploaded.<br>
+<b><a href="https://songkit-solidground.netlify.app">songkit-solidground.netlify.app</a></b></p>
 
 <p align="center"><img src="docs/screenshot.jpg" width="820" alt="Songkit screenshot"></p>
 
@@ -22,7 +23,7 @@ Works with songs from any source, including Suno, Udio, or your own recordings.
 
 ## Install (Windows)
 
-**Easiest:** go to the Songkit website, click **Download**, and follow the 3 steps.
+**Easiest:** go to **[songkit-solidground.netlify.app](https://songkit-solidground.netlify.app)**, click **Download**, and follow the 3 steps.
 
 1. Download the zip and choose **Extract All**.
 2. Double-click **`Install-Songkit.bat`**. It installs Python and ffmpeg if needed, sets Songkit up, and adds a desktop icon (5 to 10 minutes, one time).
